@@ -1,0 +1,55 @@
+{
+  "model_features": [
+    "latency",
+    "pos_x",
+    "pos_y",
+    "pos_noise_x",
+    "pos_noise_y",
+    "speed_x",
+    "speed_y",
+    "speed_norm",
+    "speed_noise_x",
+    "speed_noise_y",
+    "accel_x",
+    "accel_y",
+    "accel_norm",
+    "accel_noise_x",
+    "accel_noise_y",
+    "heading_x",
+    "heading_y",
+    "heading_norm",
+    "heading_noise_x",
+    "heading_noise_y"
+  ],
+  "targets": [
+    "label_binary",
+    "label_attack"
+  ],
+  "group_split_key": "run_id / shared temporal block",
+  "forbidden_model_inputs": [
+    "audit_truth_available",
+    "audit_position_error",
+    "audit_speed_error",
+    "audit_accel_error",
+    "audit_heading_error"
+  ],
+  "identifier_columns": [
+    "scenario",
+    "period",
+    "run_id",
+    "receiver_id",
+    "sender_id",
+    "sender_pseudo",
+    "message_id",
+    "attack_code",
+    "receive_time",
+    "send_time"
+  ],
+  "rules": [
+    "Fit imputers/scalers/feature selection on training runs only.",
+    "Create temporal windows only after assigning whole runs to partitions.",
+    "Do not use SMOTE on time-series windows before splitting.",
+    "Do not randomly split messages; mobility traces recur across scenarios.",
+    "Use macro-F1, per-class recall, MCC and AUPRC in addition to accuracy."
+  ]
+}

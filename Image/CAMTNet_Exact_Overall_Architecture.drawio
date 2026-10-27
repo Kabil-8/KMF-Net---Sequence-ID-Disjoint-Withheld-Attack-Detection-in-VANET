@@ -1,0 +1,143 @@
+<mxfile host="Electron" agent="ChatGPT">
+  <diagram id="camt-net-architecture" name="CAMT-Net Overall Architecture">
+    <mxGraphModel dx="1252" dy="2193" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2260" pageHeight="1240" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="input_4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF2FF;strokeColor=#4776B8;fontColor=#1D2939;fontFamily=Times New Roman;align=center;verticalAlign=middle;spacing=8;strokeWidth=1.6;shadow=0;fontSize=15;fontStyle=1" value="&lt;div style=&quot;color: rgb(29, 41, 57); text-align: center; line-height: 1.15;&quot;&gt;BSM sequence input&lt;/div&gt;&lt;div style=&quot;color: rgb(29, 41, 57); text-align: center; line-height: 1.25; margin-top: 6px;&quot;&gt;X ∈ ℝ&lt;sup&gt;B×32×19&lt;/sup&gt;&lt;br&gt;32 consecutive messages&lt;br&gt;19 retained features&lt;/div&gt;" vertex="1">
+          <mxGeometry height="145" width="180" x="40" y="250" as="geometry" />
+        </mxCell>
+        <mxCell id="stem_5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3D6;strokeColor=#B98520;fontColor=#1D2939;fontFamily=Times New Roman;align=center;verticalAlign=middle;spacing=8;strokeWidth=1.6;shadow=0;fontSize=15;fontStyle=1" value="&lt;div style=&quot;color: rgb(29, 41, 57); text-align: center; line-height: 1.15;&quot;&gt;Kinematic-difference stem&lt;/div&gt;&lt;div style=&quot;color: rgb(29, 41, 57); text-align: center; line-height: 1.25; margin-top: 6px;&quot;&gt;Δx&lt;sub&gt;t&lt;/sub&gt; = x&lt;sub&gt;t&lt;/sub&gt; − x&lt;sub&gt;t−1&lt;/sub&gt;; first step = 0&lt;br&gt;Δ²x computed from Δx; first step = 0&lt;br&gt;Concatenate [x, Δx, Δ²x] → 57 channels&lt;br&gt;BatchNorm1d → S ∈ ℝ&lt;sup&gt;B×32×57&lt;/sup&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="175" width="245" x="260" y="235" as="geometry" />
+        </mxCell>
+        <mxCell id="branch_a_label_6" parent="1" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;strokeColor=none;fillColor=none;fontColor=#278778;fontFamily=Times New Roman;fontSize=15;spacing=0;fontStyle=1" value="&lt;div style=&quot;color: rgb(39, 135, 120); text-align: center;&quot;&gt;BRANCH A · LOCAL FEATURES + SEQUENTIAL DYNAMICS&lt;/div&gt;" vertex="1">
+          <mxGeometry height="30" width="540" x="475" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="branch_b_label_7" parent="1" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;strokeColor=none;fillColor=none;fontColor=#4776B8;fontFamily=Times New Roman;fontSize=15;spacing=0;fontStyle=1" value="&lt;div style=&quot;color: rgb(71, 118, 184); text-align: center;&quot;&gt;BRANCH B · GLOBAL TEMPORAL CONTEXT&lt;/div&gt;" vertex="1">
+          <mxGeometry height="30" width="540" x="540" y="365" as="geometry" />
+        </mxCell>
+        <mxCell id="cnn_8" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E5F5F1;strokeColor=#278778;fontColor=#1D2939;fontFamily=Times New Roman;align=center;verticalAlign=middle;spacing=8;strokeWidth=1.6;shadow=0;fontSize=15;fontStyle=1" value="&lt;div style=&quot;color: rgb(29, 41, 57); text-align: center; line-height: 1.15;&quot;&gt;Two Conv1D blocks&lt;/div&gt;&lt;div style=&quot;color: rgb(29, 41, 57); text-align: center; line-height: 1.25; margin-top: 6px;&quot;&gt;Conv1D 57→96 (k=3, p=1) → BN → GELU&lt;br&gt;Conv1D 96→96 (k=3, p=1) → BN → GELU&lt;br&gt;Output A ∈ ℝ&lt;sup&gt;B×32×96&lt;/sup&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="135" width="245" x="545" y="165" as="geometry" />
+        </mxCell>
+        <mxCell id="mamba_9" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E5F5F1;strokeColor=#278778;fontColor=#1D2939;fontFamily=Times New Roman;align=center;verticalAlign=middle;spacing=8;strokeWidth=1.6;shadow=0;fontSize=15;fontStyle=1" value="&lt;div style=&quot;color: rgb(29, 41, 57); text-align: center; line-height: 1.15;&quot;&gt;Mamba / selective SSM × 2&lt;/div&gt;&lt;div style=&quot;color: rgb(29, 41, 57); text-align: center; line-height: 1.25; margin-top: 6px;&quot;&gt;Each block: LayerNorm → Mamba&lt;br&gt;d_state=16, d_conv=4, expand=2&lt;br&gt;Dropout + residual; final LayerNorm&lt;br&gt;Output A ∈ ℝ&lt;sup&gt;B×32×96&lt;/sup&gt;&lt;br&gt;&lt;i&gt;Pure-PyTorch SSM in recorded run&lt;/i&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="145" width="255" x="825" y="165" as="geometry" />
+        </mxCell>
+        <mxCell id="projection_10" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF2FF;strokeColor=#4776B8;fontColor=#1D2939;fontFamily=Times New Roman;align=center;verticalAlign=middle;spacing=8;strokeWidth=1.6;shadow=0;fontSize=15;fontStyle=1" value="&lt;div style=&quot;color: rgb(29, 41, 57); text-align: center; line-height: 1.15;&quot;&gt;Input projection + position&lt;/div&gt;&lt;div style=&quot;color: rgb(29, 41, 57); text-align: center; line-height: 1.25; margin-top: 6px;&quot;&gt;Linear 57→96&lt;br&gt;Add learned positional encoding&lt;br&gt;P ∈ ℝ&lt;sup&gt;1×32×96&lt;/sup&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="120" width="245" x="545" y="410" as="geometry" />
+        </mxCell>
+        <mxCell id="transformer_11" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF2FF;strokeColor=#4776B8;fontColor=#1D2939;fontFamily=Times New Roman;align=center;verticalAlign=middle;spacing=8;strokeWidth=1.6;shadow=0;fontSize=15;fontStyle=1" value="&lt;div style=&quot;color: rgb(29, 41, 57); text-align: center; line-height: 1.15;&quot;&gt;Transformer encoder&lt;/div&gt;&lt;div style=&quot;color: rgb(29, 41, 57); text-align: center; line-height: 1.25; margin-top: 6px;&quot;&gt;3 encoder layers; 8 attention heads&lt;br&gt;Model width d=96; FFN width=192&lt;br&gt;GELU; pre-LayerNorm encoder layers&lt;br&gt;Final LayerNorm&lt;br&gt;Output B ∈ ℝ&lt;sup&gt;B×32×96&lt;/sup&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="155" width="255" x="825" y="395" as="geometry" />
+        </mxCell>
+        <mxCell id="cross_attention_12" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0EAFE;strokeColor=#8064B6;fontColor=#1D2939;fontFamily=Times New Roman;align=center;verticalAlign=middle;spacing=8;strokeWidth=1.6;shadow=0;fontSize=15;fontStyle=1" value="&lt;div style=&quot;color: rgb(29, 41, 57); text-align: center; line-height: 1.15;&quot;&gt;Bidirectional cross-attention&lt;/div&gt;&lt;div style=&quot;color: rgb(29, 41, 57); text-align: center; line-height: 1.25; margin-top: 6px;&quot;&gt;A attends to B:&lt;br&gt;MHA(Q=A, K=B, V=B)&lt;br&gt;&lt;br&gt;B attends to A:&lt;br&gt;MHA(Q=B, K=A, V=A)&lt;br&gt;&lt;br&gt;Each path: residual + LayerNorm&lt;br&gt;Outputs A′, B′ ∈ ℝ&lt;sup&gt;B×32×96&lt;/sup&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="230" width="255" x="1120" y="255" as="geometry" />
+        </mxCell>
+        <mxCell id="fusion_13" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0EAFE;strokeColor=#8064B6;fontColor=#1D2939;fontFamily=Times New Roman;align=center;verticalAlign=middle;spacing=8;strokeWidth=1.6;shadow=0;fontSize=15;fontStyle=1" value="&lt;div style=&quot;color: rgb(29, 41, 57); text-align: center; line-height: 1.15;&quot;&gt;Adaptive gated fusion&lt;/div&gt;&lt;div style=&quot;color: rgb(29, 41, 57); text-align: center; line-height: 1.25; margin-top: 6px;&quot;&gt;G = sigmoid(Linear([A′; B′]))&lt;br&gt;G ∈ (0,1)&lt;sup&gt;B×32×96&lt;/sup&gt;&lt;br&gt;&lt;br&gt;H₀ = LayerNorm(G⊙A′ + (1−G)⊙B′)&lt;br&gt;&lt;br&gt;Residual FFN: 96→192→96&lt;br&gt;H = H₀ + Dropout(FFN(LN(H₀)))&lt;/div&gt;" vertex="1">
+          <mxGeometry height="230" width="250" x="1130" y="600" as="geometry" />
+        </mxCell>
+        <mxCell id="pooling_14" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3D6;strokeColor=#B98520;fontColor=#1D2939;fontFamily=Times New Roman;align=center;verticalAlign=middle;spacing=8;strokeWidth=1.6;shadow=0;fontSize=15;fontStyle=1" value="&lt;div style=&quot;color: rgb(29, 41, 57); text-align: center; line-height: 1.15;&quot;&gt;Temporal pooling&lt;/div&gt;&lt;div style=&quot;color: rgb(29, 41, 57); text-align: center; line-height: 1.25; margin-top: 6px;&quot;&gt;Concatenate:&lt;br&gt;mean(H)&lt;br&gt;max(H)&lt;br&gt;last token&lt;br&gt;&lt;br&gt;Vector = 3d = 288&lt;/div&gt;" vertex="1">
+          <mxGeometry height="150" width="150" x="810" y="630" as="geometry" />
+        </mxCell>
+        <mxCell id="wW9EmfRgx8p_sn_gwep6-4" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=15;fontStyle=1;fontFamily=Times New Roman;" target="multiclass_head_16">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="620" y="630" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="wW9EmfRgx8p_sn_gwep6-5" edge="1" parent="1" source="shared_head_15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=15;fontStyle=1;fontFamily=Times New Roman;" target="binary_head_17">
+          <mxGeometry relative="1" x="-0.0663" as="geometry">
+            <Array as="points">
+              <mxPoint x="628" y="590" />
+              <mxPoint x="142.5" y="590" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="shared_head_15" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F4F6F8;strokeColor=#98A2B3;fontColor=#1D2939;fontFamily=Times New Roman;align=center;verticalAlign=middle;spacing=8;strokeWidth=1.6;shadow=0;fontSize=15;fontStyle=1" value="&lt;div style=&quot;color: rgb(29, 41, 57); text-align: center; line-height: 1.15;&quot;&gt;Dual-head shared trunk&lt;/div&gt;&lt;div style=&quot;color: rgb(29, 41, 57); text-align: center; line-height: 1.25; margin-top: 6px;&quot;&gt;LayerNorm(288) → Linear 288→96&lt;br&gt;GELU → Dropout&lt;br&gt;&lt;br&gt;Shared hidden representation&lt;br&gt;h ∈ ℝ&lt;sup&gt;B×96&lt;/sup&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="150" width="260" x="498" y="640" as="geometry" />
+        </mxCell>
+        <mxCell id="multiclass_head_16" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF2FF;strokeColor=#4776B8;fontColor=#1D2939;fontFamily=Times New Roman;align=center;verticalAlign=middle;spacing=8;strokeWidth=1.6;shadow=0;fontSize=15;fontStyle=1" value="&lt;div style=&quot;color: rgb(29, 41, 57); text-align: center; line-height: 1.15;&quot;&gt;17-class head&lt;/div&gt;&lt;div style=&quot;color: rgb(29, 41, 57); text-align: center; line-height: 1.25; margin-top: 6px;&quot;&gt;Linear 96→17&lt;br&gt;Known classes: benign + 16 attacks&lt;br&gt;Logits z&lt;sub&gt;mc&lt;/sub&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="100" width="185" x="260" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="wW9EmfRgx8p_sn_gwep6-3" edge="1" parent="1" source="binary_head_17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fontSize=15;fontStyle=1;fontFamily=Times New Roman;" target="openset_panel_28">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="150" y="1025" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="binary_head_17" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF0E5;strokeColor=#B96E35;fontColor=#1D2939;fontFamily=Times New Roman;align=center;verticalAlign=middle;spacing=8;strokeWidth=1.6;shadow=0;fontSize=15;fontStyle=1" value="&lt;div style=&quot;color: rgb(29, 41, 57); text-align: center; line-height: 1.15;&quot;&gt;Binary head&lt;/div&gt;&lt;div style=&quot;color: rgb(29, 41, 57); text-align: center; line-height: 1.25; margin-top: 6px;&quot;&gt;Linear 96→1&lt;br&gt;Benign vs. malicious&lt;br&gt;Logit z&lt;sub&gt;bin&lt;/sub&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="100" width="185" x="50" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="openset_panel_28" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#B54747;fontColor=#1D2939;fontFamily=Times New Roman;align=center;verticalAlign=top;spacing=8;strokeWidth=1.6;shadow=0;dashed=1;dashPattern=8 4;fontSize=15;fontStyle=1" value="" vertex="1">
+          <mxGeometry height="330" width="590" x="445" y="860" as="geometry" />
+        </mxCell>
+        <mxCell id="openset_panel_header_29" parent="1" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;strokeColor=none;fillColor=none;fontColor=#B54747;fontFamily=Times New Roman;fontSize=15;spacing=0;fontStyle=1" value="&lt;div style=&quot;color: rgb(181, 71, 71); text-align: left;&quot;&gt;OPEN-SET EVALUATION&lt;/div&gt;" vertex="1">
+          <mxGeometry height="28" width="554" x="468" y="880" as="geometry" />
+        </mxCell>
+        <mxCell id="openset_score_30" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FCEAEA;strokeColor=#B54747;fontColor=#1D2939;fontFamily=Times New Roman;align=center;verticalAlign=middle;spacing=8;strokeWidth=1.6;shadow=0;fontSize=15;fontStyle=1" value="&lt;div style=&quot;color: rgb(29, 41, 57); text-align: center; line-height: 1.15;&quot;&gt;Default score: binary-head logit z_bin&lt;/div&gt;&lt;div style=&quot;color: rgb(29, 41, 57); text-align: center; line-height: 1.25; margin-top: 6px;&quot;&gt;Alternative scores are analysed separately in the notebook.&lt;/div&gt;" vertex="1">
+          <mxGeometry height="55" width="530" x="475" y="920" as="geometry" />
+        </mxCell>
+        <mxCell id="openset_threshold_31" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FCEAEA;strokeColor=#B54747;fontColor=#1D2939;fontFamily=Times New Roman;align=center;verticalAlign=middle;spacing=8;strokeWidth=1.6;shadow=0;fontSize=15;fontStyle=1" value="&lt;div style=&quot;color: rgb(29, 41, 57); text-align: center; line-height: 1.15;&quot;&gt;Validation-calibrated threshold τ&lt;/div&gt;&lt;div style=&quot;color: rgb(29, 41, 57); text-align: center; line-height: 1.25; margin-top: 6px;&quot;&gt;Choose the F1-optimal threshold on known-class validation data&lt;br&gt;for benign-versus-malicious detection.&lt;/div&gt;" vertex="1">
+          <mxGeometry height="70" width="530" x="476" y="985" as="geometry" />
+        </mxCell>
+        <mxCell id="openset_eval_32" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FCEAEA;strokeColor=#B54747;fontColor=#1D2939;fontFamily=Times New Roman;align=center;verticalAlign=middle;spacing=8;strokeWidth=1.6;shadow=0;fontSize=15;fontStyle=1" value="&lt;div style=&quot;color: rgb(29, 41, 57); text-align: center; line-height: 1.15;&quot;&gt;Withheld-attack evaluation&lt;/div&gt;&lt;div style=&quot;color: rgb(29, 41, 57); text-align: center; line-height: 1.25; margin-top: 6px;&quot;&gt;Positives: DataReplaySybil, DoSDisruptiveSybil, GridSybil&lt;br&gt;Negatives: benign windows from the closed-set test partition&lt;br&gt;Reports AUROC, AUPRC, detection rate, benign TNR and FPR@95TPR.&lt;/div&gt;" vertex="1">
+          <mxGeometry height="100" width="530" x="475" y="1065" as="geometry" />
+        </mxCell>
+        <mxCell id="e_input_stem_33" edge="1" parent="1" source="input_4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#B98520;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fontSize=15;fontStyle=1;fontFamily=Times New Roman;" target="stem_5" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_stem_cnn_34" edge="1" parent="1" source="stem_5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#278778;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fontSize=15;fontStyle=1;fontFamily=Times New Roman;" target="cnn_8" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="520" y="322" />
+              <mxPoint x="520" y="232" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_stem_projection_35" edge="1" parent="1" source="stem_5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#4776B8;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fontSize=15;fontStyle=1;fontFamily=Times New Roman;" target="projection_10" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="520" y="322" />
+              <mxPoint x="520" y="470" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_cnn_mamba_36" edge="1" parent="1" source="cnn_8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#278778;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fontSize=15;fontStyle=1;fontFamily=Times New Roman;" target="mamba_9" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_projection_transformer_37" edge="1" parent="1" source="projection_10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#4776B8;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fontSize=15;fontStyle=1;fontFamily=Times New Roman;" target="transformer_11" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_mamba_cross_38" edge="1" parent="1" source="mamba_9" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#278778;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.28;entryDx=0;entryDy=0;fontSize=15;fontStyle=1;fontFamily=Times New Roman;" target="cross_attention_12" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1095" y="237" />
+              <mxPoint x="1095" y="320" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_transformer_cross_39" edge="1" parent="1" source="transformer_11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#4776B8;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.74;entryDx=0;entryDy=0;fontSize=15;fontStyle=1;fontFamily=Times New Roman;" target="cross_attention_12" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1095" y="472" />
+              <mxPoint x="1095" y="425" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_cross_fusion_40" edge="1" parent="1" source="cross_attention_12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#8064B6;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=15;fontStyle=1;fontFamily=Times New Roman;" target="fusion_13" value="">
+          <mxGeometry relative="1" x="0.0469" as="geometry" />
+        </mxCell>
+        <mxCell id="e_fusion_pool_41" edge="1" parent="1" source="fusion_13" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#8064B6;strokeWidth=2;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;fontSize=15;fontStyle=1;fontFamily=Times New Roman;" target="pooling_14" value="">
+          <mxGeometry relative="1" x="0.5429" as="geometry" />
+        </mxCell>
+        <mxCell id="e_pool_sharedhead_42" edge="1" parent="1" source="pooling_14" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#526777;strokeWidth=2;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=15;fontStyle=1;fontFamily=Times New Roman;" target="shared_head_15" value="">
+          <mxGeometry relative="1" x="0.6901" as="geometry" />
+        </mxCell>
+        <mxCell id="e_score_threshold_49" edge="1" parent="1" source="openset_score_30" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#B54747;strokeWidth=1.6;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=15;fontStyle=1;fontFamily=Times New Roman;" target="openset_threshold_31" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_threshold_eval_50" edge="1" parent="1" source="openset_threshold_31" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#B54747;strokeWidth=1.6;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=15;fontStyle=1;fontFamily=Times New Roman;" target="openset_eval_32" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
